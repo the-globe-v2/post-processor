@@ -1,13 +1,13 @@
+from abc import ABC, abstractmethod
+from typing import Dict, Any, Tuple, List
 import os
 import json
-from abc import ABC, abstractmethod
-from typing import List, Tuple, Dict, Any
-
 import structlog
 from langchain_core.prompts import PromptTemplate
 from langchain_core.rate_limiters import InMemoryRateLimiter
 
 from globe_news_post_processor.config import Config
+from globe_news_post_processor.models import LLMArticleData
 
 
 class BaseLLMHandler(ABC):
@@ -19,12 +19,18 @@ class BaseLLMHandler(ABC):
         self._few_shot_examples = self._load_few_shot_examples(config.FEW_SHOT_EXAMPLES_FILE)
         self._system_prompt = self._load_system_prompt(config.SYSTEM_PROMPT_FILE)
         self._example_prompt = PromptTemplate.from_template("Article: {input}\n{output}")
-
         self._rate_limiter = self._create_rate_limiter()
 
     @abstractmethod
-    def process_article_batch(self, articles: List[Dict[str, Any]]) -> Tuple[
-        List[Dict[str, Any]], List[Dict[str, Any]], Dict[str, int]]:
+    def process_article(self, article: Dict[str, Any]) -> Tuple[LLMArticleData, Dict[str, int]]:
+        """
+        Process a single article using the LLM.
+
+        :param article: A dictionary containing the article content to be processed.
+        :return: A tuple containing:
+            - LLMArticleData: The processed article data.
+            - Dict[str, int]: Token usage information.
+        """
         pass
 
     @staticmethod
@@ -54,11 +60,6 @@ class BaseLLMHandler(ABC):
 
     @staticmethod
     def _create_rate_limiter() -> InMemoryRateLimiter:
-        """
-        Create a rate limiter for the LLM.
-
-        :returns: Runnable: LLM runnable with rate limiting configuration.
-        """
         return InMemoryRateLimiter(
             requests_per_second=0.5,
             check_every_n_seconds=0.1,

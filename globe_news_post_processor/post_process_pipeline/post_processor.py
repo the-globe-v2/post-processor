@@ -1,75 +1,51 @@
-import asyncio
-from typing import List, Tuple, Dict, Any
+import structlog
+from typing import Dict, Any, Tuple
 
 from globe_news_post_processor.config import Config
-from globe_news_post_processor.models import GlobeArticle, CuratedGlobeArticle, FailedGlobeArticle
+from globe_news_post_processor.models import GlobeArticle, CuratedGlobeArticle, FailedGlobeArticle, LLMArticleData
 from globe_news_post_processor.post_process_pipeline.langchain import LLMHandlerFactory
 from globe_news_post_processor.post_process_pipeline.translator import ArticleTranslator
 
 
-# TODO: Change ArticlePostProcessor to only process one article at a time, GlobeNewsPostProcessor will handle batches
 class ArticlePostProcessor:
     def __init__(self, config: Config):
         self._config = config
+        self._logger = structlog.get_logger()
         self._translator = ArticleTranslator(config)
         self._llm_handler = LLMHandlerFactory.create_handler(config)
 
-    def process_batch(self, articles: List[GlobeArticle]) -> Tuple[
-        List[CuratedGlobeArticle], List[FailedGlobeArticle]]:
+    async def process_article(self, article: GlobeArticle) -> Tuple[CuratedGlobeArticle, Dict[
+        str, int]] | FailedGlobeArticle:
+        try:
+            llm_result, token_usage = self._llm_handler.process_article(article.model_dump())
 
-        # Convert GlobeArticle objects to dictionaries for processing
-        dict_articles = [article.model_dump() for article in articles]
+            translated_title, translated_description = await self._translate_if_needed(article)
 
-        # Call the process_article_batch method of the LLM handler
-        llm_processed_articles, llm_process_fails, token_usage = self._llm_handler.process_article_batch(dict_articles)
+            curated_article = self._create_curated_article(article, llm_result, translated_title,
+                                                           translated_description)
 
-        # Translate article titles and descriptions
-        translated_articles, failed_translations = asyncio.run(self._translate_articles_async(llm_processed_articles))
+            return curated_article, token_usage
+        except Exception as e:
+            self._logger.error(f"Error post processing article {article.id}: {str(e)}")
+            return FailedGlobeArticle(**article.model_dump(), failure_reason=str(e))
 
-        post_processed_items = [CuratedGlobeArticle.model_validate(article) for article in translated_articles]
-        failed_articles = [FailedGlobeArticle.model_validate(article) for article in
-                           llm_process_fails + failed_translations]
+    async def _translate_if_needed(self, article: GlobeArticle) -> Tuple[str, str]:
+        if article.language != 'en' and article.language:
+            title = await self._translator.translate_async(article.title, from_lang=article.language)
+            description = await self._translator.translate_async(article.description, from_lang=article.language)
+        else:
+            title, description = article.title, article.description
+        return title, description
 
-        return post_processed_items, failed_articles
-
-    async def _translate_articles_async(self, articles: List[Dict[str, Any]]) -> Tuple[
-        List[Dict[str, Any]], List[Dict[str, Any]]]:
-        tasks = []
-
-        # Initialize lists for successful translations and failures
-        translated_articles = []
-        failed_translations = []
-
-        for article in articles:
-            # If the article is already in English, skip translation and set the translated fields to the original
-            if article['language'] == 'en':
-                article['title_translated'] = article['title']
-                article['description_translated'] = article['description']
-                translated_articles.append(article)
-            else:
-                # Translate both title and description
-                tasks.append(self._translator.translate_async(article['title'], from_lang=article['language']))
-                tasks.append(self._translator.translate_async(article['description'], from_lang=article['language']))
-
-        results = await asyncio.gather(*tasks, return_exceptions=True)
-
-
-        for i, article in enumerate(articles):
-            title_result = results[i * 2]
-            description_result = results[i * 2 + 1]
-            article_modified = article.copy()  # Work with a copy to avoid modifying the original prematurely
-
-            if isinstance(title_result, Exception) or isinstance(description_result, Exception):
-                # If any translation failed, record the error
-                article_modified['failure_reason'] = f"Title Error: {str(title_result)}" if isinstance(title_result,
-                                                                                                      Exception) else ""
-                article_modified['failure_reason'] += f" Description Error: {str(description_result)}" if isinstance(
-                    description_result, Exception) else ""
-                failed_translations.append(article_modified)
-            else:
-                # If both translations succeeded, update the article
-                article_modified['title_translated'] = title_result
-                article_modified['description_translated'] = description_result
-                translated_articles.append(article_modified)
-
-        return translated_articles, failed_translations
+    @staticmethod
+    def _create_curated_article(article: GlobeArticle, llm_result: LLMArticleData,
+                                translated_title: str, translated_description: str) -> CuratedGlobeArticle:
+        return CuratedGlobeArticle(
+            **article.model_dump(exclude={'category', 'related_countries', 'keywords',
+                                          'title_translated', 'description_translated'}),
+            category=llm_result.category,
+            related_countries=llm_result.related_countries,
+            keywords=llm_result.keywords,
+            title_translated=translated_title,
+            description_translated=translated_description
+        )

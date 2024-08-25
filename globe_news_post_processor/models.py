@@ -62,6 +62,7 @@ class GlobeArticle(BaseModel):
 class CuratedGlobeArticle(GlobeArticle):
     """
     Enhanced model for post-processed Globe articles, ensuring data integrity and curation.
+    Sets category as a literal, to limit the possible values to a predefined set.
 
     Inherits all attributes from GlobeArticle and applies additional post-processing logic,
     specifically removing the origin country from the list of related countries if present
@@ -77,6 +78,7 @@ class CuratedGlobeArticle(GlobeArticle):
     # Since CuratedGlobeArticle isn't instantiated directly from MongoDB but rather from GlobeArticle,
     # we need to specify the 'id' field as an alias to '_id' to match the MongoDB document structure.
     id: ObjectId = Field(..., alias='id')
+    category: Literal['POLITICS', 'ECONOMY', 'TECHNOLOGY', 'SOCIETY', 'CULTURE', 'SPORTS', 'ENVIRONMENT', 'HEALTH']
 
     @field_validator('post_processed', mode='before')
     def set_post_processed_to_true(cls, v: Any) -> bool:
@@ -112,7 +114,7 @@ class LLMArticleData(BaseModel):
     """
     Data model used by langchain to parse the LLM output and extract relevant information.
     """
-    category: Literal['POLITICS', 'ECONOMY', 'TECHNOLOGY', 'SOCIETY', 'CULTURE', 'SPORTS', 'ENVIRONMENT']
+    category: Literal['POLITICS', 'ECONOMY', 'TECHNOLOGY', 'SOCIETY', 'CULTURE', 'SPORTS', 'ENVIRONMENT', 'HEALTH']
     related_countries: List[CountryAlpha2]
     keywords: List[str] = Field(..., max_length=5)
 

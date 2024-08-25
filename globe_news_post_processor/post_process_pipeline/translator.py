@@ -13,32 +13,16 @@ class ArticleTranslatorError(Exception):
 
 class ArticleTranslator:
     def __init__(self, config: Config):
-        """
-        Class to handle translation of articles, using the Azure Translator API.
-        When rate limits are reached, backoff and retry after the specified time.
-
-        Refer here for more information on the Azure Translator API:
-        https://learn.microsoft.com/en-us/azure/ai-services/translator/reference/rest-api-guide
-
-        :param config:
-        """
         self._logger = structlog.get_logger()
         self._api_key = config.AZURE_TRANSLATOR_API_KEY.get_secret_value()
         self._endpoint = config.AZURE_TRANSLATOR_ENDPOINT
         self._location = config.AZURE_TRANSLATOR_LOCATION
         self._path = '/translate'
-        self._initial_backoff = 1.0  # Initial backoff delay in seconds
-        self._max_backoff = 60.0  # Maximum backoff delay in seconds
+        self._initial_backoff = 1.0
+        self._max_backoff = 60.0
 
     async def translate_async(self, text: str, from_lang: LanguageAlpha2,
                               to_lang: LanguageAlpha2 = LanguageAlpha2('en')) -> str:
-        """
-        Translate the given text asynchronously from the source language to the target language.
-        :param text: (str) Text to be translated.
-        :param from_lang: (str) Source language code.
-        :param to_lang: (str) Target language code. Default is 'en' (English).
-        :return: (str) Translated text
-        """
         constructed_url = str(self._endpoint) + self._path
         params = {
             'api-version': '3.0',
@@ -78,9 +62,3 @@ class ArticleTranslator:
                     else:
                         self._logger.error(f"Translation failed: {e}")
                         raise ArticleTranslatorError(f"Translation failed: {e}")
-
-    def _validate_translation(self, text: str) -> str:
-        """
-        Validate the translated text.
-        """
-        return ''

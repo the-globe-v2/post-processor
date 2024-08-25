@@ -10,7 +10,7 @@ class Config(BaseSettings):
     LOGGING_DIR: str = Field(default='logs')
     MONGO_URI: str
     MONGO_DB: str
-    BATCH_SIZE: int = 20
+    BATCH_SIZE: int = 10
 
     # LLM Configuration
     LLM_PROVIDER: Literal['azure_openai'] = 'azure_openai'

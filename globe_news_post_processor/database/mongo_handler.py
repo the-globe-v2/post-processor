@@ -51,8 +51,8 @@ class MongoHandler:
                             "post_processed": True,
                             "category": curated_article.category,
                             "related_countries": curated_article.related_countries,
-                            "translated_title": curated_article.title_translated,
-                            "translated_description": curated_article.description_translated
+                            "title_translated": curated_article.title_translated,
+                            "description_translated": curated_article.description_translated
                         },
                         "$addToSet": {
                             "keywords": {
@@ -98,6 +98,11 @@ class MongoHandler:
                     self._logger.warning(f"Article {failed_article.id} not found in articles collection")
 
         except PyMongoError as e:
-            self._logger.error(f"Error moving failed articles: {str(e)}")
+            if e._OperationFailure__code == 11000:  # type: ignore
+                self._logger.warning(
+                    f"Article {str(e._OperationFailure__details["keyValue"]['_id'])} already exists in failed_articles collection, deleting original.")  # type: ignore
+                self._articles.delete_one({"_id": e._OperationFailure__details["keyValue"]['_id']})  # type: ignore
+            else:
+                self._logger.error(f"Error moving failed articles: {str(e)}")
 
         return moved_ids

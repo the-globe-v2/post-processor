@@ -1,3 +1,5 @@
+# path: globe_news_post_processor/config.py
+
 from typing import Dict, List, Literal
 from pydantic import Field, HttpUrl, SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict

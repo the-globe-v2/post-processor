@@ -1,4 +1,6 @@
-from typing import List, Dict, Any
+# path: globe_news_post_processor/database/mongo_handler.py
+
+from typing import List
 
 import structlog
 from bson import ObjectId
@@ -11,7 +13,19 @@ from globe_news_post_processor.models import GlobeArticle, CuratedGlobeArticle, 
 
 
 class MongoHandler:
+    """
+    Handles MongoDB operations for the Globe News Post Processor.
+
+    This class manages connections to MongoDB and provides methods for
+    fetching, updating, and moving articles in the database.
+    """
+
     def __init__(self, config: Config) -> None:
+        """
+        Initialize the MongoHandler with the given configuration.
+
+        :param config: Configuration object containing MongoDB connection details.
+        """
         self._logger = structlog.get_logger()
         self._SCHEMA_VERSION = config.SCHEMA_VERSION
         try:
@@ -24,12 +38,13 @@ class MongoHandler:
 
     def get_unprocessed_articles(self, batch_size: int) -> List[GlobeArticle]:
         """
-        Fetches articles that have not been post-processed, limit to batch size, sort by latest
+        Fetch articles that have not been post-processed, limited to batch size and sorted by latest.
 
-        :param batch_size:
-        :return: List[GlobeArticle]: List of unprocessed articles.
+        :param batch_size: Number of articles to fetch.
+        :return: List of unprocessed GlobeArticle objects.
         """
         try:
+            # Query for unprocessed articles with matching schema version
             cursor = self._articles.find(
                 {
                     "post_processed": {"$ne": True},
@@ -38,15 +53,23 @@ class MongoHandler:
                 limit=batch_size
             ).sort([("post_processed", 1), ("date_scraped", -1)])
 
+            # Convert MongoDB documents to GlobeArticle objects
             return [GlobeArticle(**doc) for doc in cursor]
         except PyMongoError as e:
             self._logger.error(f"Error fetching unprocessed articles: {str(e)}")
             return []
 
     def update_articles(self, curated_articles: List[CuratedGlobeArticle]) -> List[ObjectId]:
+        """
+        Update the processed articles in the database with curated information.
+
+        :param curated_articles: List of CuratedGlobeArticle objects to update.
+        :return: List of ObjectIds of successfully updated articles.
+        """
         updated_ids = []
         try:
             for curated_article in curated_articles:
+                # Update each article with new information
                 result = self._articles.update_one(
                     {"_id": curated_article.id},
                     {
@@ -72,6 +95,12 @@ class MongoHandler:
         return updated_ids
 
     def move_failed_articles(self, failed_articles: List[FailedGlobeArticle]) -> List[ObjectId]:
+        """
+        Move failed articles to a separate collection and remove them from the main collection.
+
+        :param failed_articles: List of FailedGlobeArticle objects to move.
+        :return: List of ObjectIds of successfully moved articles.
+        """
         moved_ids = []
         try:
             for failed_article in failed_articles:
@@ -101,9 +130,10 @@ class MongoHandler:
                     self._logger.warning(f"Article {failed_article.id} not found in articles collection")
 
         except PyMongoError as e:
+            # Handle duplicate key errors (article already exists in failed_articles collection)
             if e._OperationFailure__code == 11000:  # type: ignore
                 self._logger.warning(
-                    f"Article {str(e._OperationFailure__details["keyValue"]['_id'])} already exists in failed_articles collection, deleting original.")  # type: ignore
+                    f"Article {str(e._OperationFailure__details['keyValue']['_id'])} already exists in failed_articles collection, deleting original.")  # type: ignore
                 self._articles.delete_one({"_id": e._OperationFailure__details["keyValue"]['_id']})  # type: ignore
             else:
                 self._logger.error(f"Error moving failed articles: {str(e)}")

@@ -1,4 +1,5 @@
 # path: globe_news_post_processor/models.py
+
 from bson import ObjectId
 from pydantic import BaseModel, HttpUrl, Field, model_validator, field_validator, ConfigDict
 from pydantic_extra_types.country import CountryAlpha2
@@ -70,9 +71,8 @@ class CuratedGlobeArticle(GlobeArticle):
 
     Attributes:
         Inherits all attributes from the GlobeArticle class.
-    Methods:
-        set_post_processed_to_true: Ensures the 'post_processed' flag is always set
-        remove_origin_country: Ensures the origin country is not listed among related countries.
+        category (Literal['POLITICS', 'ECONOMY', 'TECHNOLOGY', 'SOCIETY', 'CULTURE', 'SPORTS', 'ENVIRONMENT', 'HEALTH']):
+            The curated category of the article.
     """
 
     # Since CuratedGlobeArticle isn't instantiated directly from MongoDB but rather from GlobeArticle,
@@ -102,7 +102,12 @@ class CuratedGlobeArticle(GlobeArticle):
 
 class FailedGlobeArticle(GlobeArticle):
     """
-    Data model for storing GlobeArticle objects that failed to be processed.
+    Model for GlobeArticles that failed to process due to an error,
+    including a failure reason, otherwise identical to GlobeArticle.
+
+    Attributes:
+        Inherits all attributes from the GlobeArticle class.
+        failure_reason (str): The reason why the article failed to process.
     """
     id: ObjectId = Field(..., alias='id')
     failure_reason: str
@@ -113,6 +118,11 @@ class FailedGlobeArticle(GlobeArticle):
 class LLMArticleData(BaseModel):
     """
     Data model used by langchain to parse the LLM output and extract relevant information.
+
+    Arguments:
+        category: The predicted category of the article.
+        related_countries: A list of countries mentioned or relevant to the article.
+        keywords: A list of relevant keywords extracted from the article
     """
     category: Literal['POLITICS', 'ECONOMY', 'TECHNOLOGY', 'SOCIETY', 'CULTURE', 'SPORTS', 'ENVIRONMENT', 'HEALTH']
     related_countries: List[CountryAlpha2]

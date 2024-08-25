@@ -1,17 +1,27 @@
+# path: globe_news_scraper/logger.py
+
 import os
 import logging
 import structlog
+from typing import Literal
 from logging.handlers import RotatingFileHandler
 
 
-def configure_logging(log_level: str, logging_dir: str = 'logs', environment: str = 'dev') -> None:
+def configure_logging(log_level: str, logging_dir: str = 'logs',
+                      environment: Literal['dev', 'prod', 'test'] = 'dev') -> None:
+    """
+    Configure logging for the application.
+    :param log_level: The log level to use.
+    :param logging_dir: The directory to store log files.
+    :param environment: The environment to configure logging for, can be 'dev', 'prod' or 'test'.
+    """
     logger_level = logging.INFO if environment == 'prod' else getattr(logging, log_level.upper(), logging.INFO)
 
     # Ignore DEBUG messages from specific loggers
     for logger_name in ['urllib3', 'asyncio', 'httpcore', 'pymongo']:
         logging.getLogger(logger_name).setLevel(logging.INFO)
 
-    # Ignore DEBUG messages from specific loggers
+    # Ignore DEBUG and INFO messages from specific loggers
     for logger_name in ['openai', 'httpx']:
         logger = logging.getLogger(logger_name)
         logger.setLevel(logging.WARNING)

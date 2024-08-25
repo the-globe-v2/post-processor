@@ -78,7 +78,7 @@ class AzureOpenAIHandler(BaseLLMHandler):
 
         :returns: Tuple[List[Dict[str, Any]], List[Dict[str, Any]], Dict[str, int]]
                 - A list of successfully processed articles as dictionaries.
-                - A list of failed articles as dictionaries with an error_message key.
+                - A list of failed articles as dictionaries with an failure_reason key.
                 - A dictionary with total token usage information.
         """
         # Set up the prompt template for the LLM, including the system prompt and few-shot examples
@@ -154,12 +154,12 @@ class AzureOpenAIHandler(BaseLLMHandler):
                 except AzureOpenAIHandlerError as e:
                     # Handle custom errors from process_single_article
                     self._logger.error(f"Failed to process article {e.article_id}: {e.message}")
-                    article['error_message'] = e.message
+                    article['failure_reason'] = e.message
                     failed_articles.append(article)
                 except Exception as e:
                     # Handle unexpected errors
                     self._logger.error(f"Unexpected error in thread for article {article['id']}: {str(e)}")
-                    article['error_message'] = f"Unexpected thread error: {str(e)}"
+                    article['failure_reason'] = f"Unexpected thread error: {str(e)}"
                     failed_articles.append(article)
 
         return successful_articles, failed_articles, total_usage

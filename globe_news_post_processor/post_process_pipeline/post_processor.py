@@ -2,7 +2,7 @@ import asyncio
 from typing import List, Tuple, Dict, Any
 
 from globe_news_post_processor.config import Config
-from globe_news_post_processor.models import GlobeArticle, CuratedGlobeArticle, FailedGlobeArticle, FailedLLMRequest
+from globe_news_post_processor.models import GlobeArticle, CuratedGlobeArticle, FailedGlobeArticle
 from globe_news_post_processor.post_process_pipeline.langchain import LLMHandlerFactory
 from globe_news_post_processor.post_process_pipeline.translator import ArticleTranslator
 
@@ -61,9 +61,9 @@ class ArticlePostProcessor:
 
             if isinstance(title_result, Exception) or isinstance(description_result, Exception):
                 # If any translation failed, record the error
-                article_modified['error_message'] = f"Title Error: {str(title_result)}" if isinstance(title_result,
+                article_modified['failure_reason'] = f"Title Error: {str(title_result)}" if isinstance(title_result,
                                                                                                       Exception) else ""
-                article_modified['error_message'] += f" Description Error: {str(description_result)}" if isinstance(
+                article_modified['failure_reason'] += f" Description Error: {str(description_result)}" if isinstance(
                     description_result, Exception) else ""
                 failed_translations.append(article_modified)
             else:

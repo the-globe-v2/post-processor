@@ -97,6 +97,7 @@ class CuratedGlobeArticle(GlobeArticle):
             ]
         return model
 
+
 class FailedGlobeArticle(GlobeArticle):
     """
     Data model for storing GlobeArticle objects that failed to be processed.
@@ -115,12 +116,3 @@ class LLMArticleData(BaseModel):
     related_countries: List[CountryAlpha2]
     keywords: List[str] = Field(..., max_length=5)
 
-
-class FailedLLMRequest(BaseModel):
-    """
-    Data model for storing failed LM requests.
-    """
-    article_id: ObjectId
-    error_message: str
-
-    model_config = ConfigDict(arbitrary_types_allowed=True)

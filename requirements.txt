@@ -1,0 +1,8 @@
+structlog~=24.2.0
+pymongo~=4.8.0
+pydantic~=2.7.4
+pydantic-settings~=2.4.0
+pydantic-extra-types~=2.9.0
+langchain-core~=0.2.34
+langchain-openai~=0.1.22
+requests~=2.32.3

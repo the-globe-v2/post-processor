@@ -10,6 +10,7 @@ class Config(BaseSettings):
     LOGGING_DIR: str = Field(default='logs')
     MONGO_URI: str
     MONGO_DB: str
+    SCHEMA_VERSION: str = '1.1'
     BATCH_SIZE: int = 10
 
     # LLM Configuration

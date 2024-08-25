@@ -14,12 +14,11 @@ class ArticlePostProcessor:
         self._translator = ArticleTranslator(config)
         self._llm_handler = LLMHandlerFactory.create_handler(config)
 
-    async def process_article(self, article: GlobeArticle) -> Tuple[CuratedGlobeArticle, Dict[
-        str, int]] | FailedGlobeArticle:
+    def process_article(self, article: GlobeArticle) -> Tuple[CuratedGlobeArticle, Dict[str, int]] | FailedGlobeArticle:
         try:
             llm_result, token_usage = self._llm_handler.process_article(article.model_dump())
 
-            translated_title, translated_description = await self._translate_if_needed(article)
+            translated_title, translated_description = self._translate_if_needed(article)
 
             curated_article = self._create_curated_article(article, llm_result, translated_title,
                                                            translated_description)
@@ -29,10 +28,10 @@ class ArticlePostProcessor:
             self._logger.error(f"Error post processing article {article.id}: {str(e)}")
             return FailedGlobeArticle(**article.model_dump(), failure_reason=str(e))
 
-    async def _translate_if_needed(self, article: GlobeArticle) -> Tuple[str, str]:
+    def _translate_if_needed(self, article: GlobeArticle) -> Tuple[str, str]:
         if article.language != 'en' and article.language:
-            title = await self._translator.translate_async(article.title, from_lang=article.language)
-            description = await self._translator.translate_async(article.description, from_lang=article.language)
+            title = self._translator.translate(article.title, from_lang=article.language)
+            description = self._translator.translate(article.description, from_lang=article.language)
         else:
             title, description = article.title, article.description
         return title, description

@@ -1,4 +1,5 @@
-from typing import List
+from typing import List, Dict, Any
+
 import structlog
 from bson import ObjectId
 
@@ -12,6 +13,7 @@ from globe_news_post_processor.models import GlobeArticle, CuratedGlobeArticle, 
 class MongoHandler:
     def __init__(self, config: Config) -> None:
         self._logger = structlog.get_logger()
+        self._SCHEMA_VERSION = config.SCHEMA_VERSION
         try:
             self._client: MongoClient = MongoClient(config.MONGO_URI)
             self._db = self._client[config.MONGO_DB]
@@ -31,6 +33,7 @@ class MongoHandler:
             cursor = self._articles.find(
                 {
                     "post_processed": {"$ne": True},
+                    "schema_version": self._SCHEMA_VERSION
                 },
                 limit=batch_size
             ).sort([("post_processed", 1), ("date_scraped", -1)])

@@ -1,5 +1,4 @@
 import argparse
-import asyncio
 import logging
 import structlog
 
@@ -8,7 +7,7 @@ from globe_news_post_processor import GlobeNewsPostProcessor
 from globe_news_post_processor.config import get_config
 
 
-async def main() -> None:
+def main() -> None:
     parser = argparse.ArgumentParser(description="GlobeNewsPostProcessor")
     parser.add_argument('--env', type=str, choices=['dev', 'prod', 'test'], default='dev',
                         help="Specify the environment (dev, prod or test)")
@@ -22,11 +21,11 @@ async def main() -> None:
 
     try:
         processor = GlobeNewsPostProcessor(config)
-        await processor.process_pending_articles()
+        processor.process_pending_articles()
     except Exception as e:
         logger.exception("An error occurred during processing", error=str(e))
     else:
         logger.info("GlobeNewsPostProcessor completed successfully")
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    main()

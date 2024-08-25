@@ -1,6 +1,6 @@
-import asyncio
-import httpx
 import uuid
+import time
+import requests
 import structlog
 from pydantic_extra_types.language_code import LanguageAlpha2
 
@@ -21,8 +21,8 @@ class ArticleTranslator:
         self._initial_backoff = 1.0
         self._max_backoff = 60.0
 
-    async def translate_async(self, text: str, from_lang: LanguageAlpha2,
-                              to_lang: LanguageAlpha2 = LanguageAlpha2('en')) -> str:
+    def translate(self, text: str, from_lang: LanguageAlpha2,
+                  to_lang: LanguageAlpha2 = LanguageAlpha2('en')) -> str:
         constructed_url = str(self._endpoint) + self._path
         params = {
             'api-version': '3.0',
@@ -38,27 +38,26 @@ class ArticleTranslator:
         body = [{'text': text}]
 
         backoff = self._initial_backoff
-        async with httpx.AsyncClient() as client:
-            while True:
-                try:
-                    response = await client.post(constructed_url, params=params, headers=headers, json=body)
-                    response.raise_for_status()
-                    translated_text: str = response.json()[0]['translations'][0]['text']
-                    if not translated_text:
-                        raise ArticleTranslatorError("Translation failed:") from ValueError("Empty response received")
+        while True:
+            try:
+                response = requests.post(constructed_url, params=params, headers=headers, json=body)
+                response.raise_for_status()
+                translated_text: str = response.json()[0]['translations'][0]['text']
+                if not translated_text:
+                    raise ArticleTranslatorError("Translation failed:") from ValueError("Empty response received")
+                else:
+                    self._logger.debug(f"Successfully translated text from {from_lang} to {to_lang}")
+                    return translated_text
+            except requests.HTTPError as e:
+                if e.response.status_code == 429:
+                    retry_after = e.response.headers.get("Retry-After")
+                    if retry_after:
+                        backoff = float(retry_after)
                     else:
-                        self._logger.debug(f"Successfully translated text from {from_lang} to {to_lang}")
-                        return translated_text
-                except httpx.HTTPStatusError as e:
-                    if e.response.status_code == 429:
-                        retry_after = e.response.headers.get("Retry-After")
-                        if retry_after:
-                            backoff = float(retry_after)
-                        else:
-                            backoff = min(backoff * 2, self._max_backoff)
-                        self._logger.warning(
-                            f"Azure Translator Service rate limit hit, retrying after {backoff} seconds.")
-                        await asyncio.sleep(backoff)
-                    else:
-                        self._logger.error(f"Translation failed: {e}")
-                        raise ArticleTranslatorError(f"Translation failed: {e}")
+                        backoff = min(backoff * 2, self._max_backoff)
+                    self._logger.warning(
+                        f"Azure Translator Service rate limit hit, retrying after {backoff} seconds.")
+                    time.sleep(backoff)
+                else:
+                    self._logger.error(f"Translation failed: {e}")
+                    raise ArticleTranslatorError(f"Translation failed: {e}")

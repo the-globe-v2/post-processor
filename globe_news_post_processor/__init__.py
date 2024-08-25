@@ -1,4 +1,3 @@
-import asyncio
 from typing import List, Tuple, Dict
 
 import structlog
@@ -16,10 +15,10 @@ class GlobeNewsPostProcessor:
         self._mongo_handler = MongoHandler(config)
         self._article_post_processor = ArticlePostProcessor(config)
 
-    async def process_pending_articles(self) -> None:
+    def process_pending_articles(self) -> None:
         batch_size = self._config.BATCH_SIZE
         while articles := self._fetch_article_batch(batch_size):
-            curated_articles, failed_articles, total_token_usage = await self._process_batch(articles)
+            curated_articles, failed_articles, total_token_usage = self._process_batch(articles)
             self._update_articles(curated_articles, failed_articles)
             self._logger.info(f"Batch processed. Total token usage: {total_token_usage}")
 
@@ -28,16 +27,14 @@ class GlobeNewsPostProcessor:
         self._logger.debug(f"Fetched {len(article_batch)} articles.")
         return article_batch
 
-    async def _process_batch(self, articles: List[GlobeArticle]) -> Tuple[
+    def _process_batch(self, articles: List[GlobeArticle]) -> Tuple[
         List[CuratedGlobeArticle], List[FailedGlobeArticle], Dict[str, int]]:
-        tasks = [self._article_post_processor.process_article(article) for article in articles]
-        results = await asyncio.gather(*tasks)
-
         curated_articles = []
         failed_articles = []
         total_token_usage = {'input_tokens': 0, 'output_tokens': 0}
 
-        for result in results:
+        for article in articles:
+            result = self._article_post_processor.process_article(article)
             if isinstance(result, tuple):  # Successful processing
                 curated_article, token_usage = result
                 curated_articles.append(curated_article)

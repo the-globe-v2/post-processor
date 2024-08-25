@@ -61,7 +61,7 @@ class BaseLLMHandler(ABC):
     @staticmethod
     def _create_rate_limiter() -> InMemoryRateLimiter:
         return InMemoryRateLimiter(
-            requests_per_second=0.5,
+            requests_per_second=0.2,
             check_every_n_seconds=0.1,
             max_bucket_size=5
         )

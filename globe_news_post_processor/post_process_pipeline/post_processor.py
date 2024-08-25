@@ -35,16 +35,24 @@ class ArticlePostProcessor:
     async def _translate_articles_async(self, articles: List[Dict[str, Any]]) -> Tuple[
         List[Dict[str, Any]], List[Dict[str, Any]]]:
         tasks = []
-        for article in articles:
-            # Translate both title and description
-            tasks.append(self._translator.translate_async(article['title'], from_lang=article['language']))
-            tasks.append(self._translator.translate_async(article['description'], from_lang=article['language']))
-
-        results = await asyncio.gather(*tasks, return_exceptions=True)
 
         # Initialize lists for successful translations and failures
         translated_articles = []
         failed_translations = []
+
+        for article in articles:
+            # If the article is already in English, skip translation and set the translated fields to the original
+            if article['language'] == 'en':
+                article['title_translated'] = article['title']
+                article['description_translated'] = article['description']
+                translated_articles.append(article)
+            else:
+                # Translate both title and description
+                tasks.append(self._translator.translate_async(article['title'], from_lang=article['language']))
+                tasks.append(self._translator.translate_async(article['description'], from_lang=article['language']))
+
+        results = await asyncio.gather(*tasks, return_exceptions=True)
+
 
         for i, article in enumerate(articles):
             title_result = results[i * 2]

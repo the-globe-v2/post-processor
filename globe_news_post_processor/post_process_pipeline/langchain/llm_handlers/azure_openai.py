@@ -72,10 +72,9 @@ class AzureOpenAIHandler(BaseLLMHandler):
                 f"Processed article {article['id']} with {invoke_result['raw'].usage_metadata['total_tokens']} tokens")
             return parsed_result, token_usage
         except OutputParserException as ope:
-            # Log and re-raise parsing errors
-            self._logger.warning(
+            # re-raise parsing error
+            raise OutputParserException(
                 f"Failed to parse LLMArticleData from LLM response to article {article['id']}: {ope.llm_output}")
-            raise
         except Exception as e:
             # Log and re-raise any other errors
             self._logger.error(f"Unknown error processing LLM response to article {article['id']}: {str(e)}")

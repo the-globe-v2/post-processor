@@ -49,6 +49,7 @@ class ArticlePostProcessor:
             return curated_article, token_usage
         except OutputParserException as ope:
             self._logger.warning(ope)
+            return FailedGlobeArticle(**article.model_dump(), failure_reason=str(ope))
         except PermissionDeniedError as pde:
             self._logger.critical(f"Critical permission error, exiting: {str(pde)}")
             quit(1)

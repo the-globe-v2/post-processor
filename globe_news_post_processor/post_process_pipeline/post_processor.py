@@ -4,6 +4,7 @@ import structlog
 from typing import Dict, Tuple
 
 from langchain_core.exceptions import OutputParserException
+from openai import PermissionDeniedError
 
 from globe_news_post_processor.config import Config
 from globe_news_post_processor.models import GlobeArticle, CuratedGlobeArticle, FailedGlobeArticle, LLMArticleData
@@ -48,6 +49,9 @@ class ArticlePostProcessor:
             return curated_article, token_usage
         except OutputParserException as ope:
             self._logger.warning(ope)
+        except PermissionDeniedError as pde:
+            self._logger.critical(f"Critical permission error, exiting: {str(pde)}")
+            quit(1)
         except Exception as e:
             # Log the error and return a FailedGlobeArticle if processing fails
             self._logger.error(f"Error post processing article {article.id}: {str(e)}")

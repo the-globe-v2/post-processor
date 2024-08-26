@@ -3,10 +3,12 @@
 from typing import Dict, Any, Tuple
 
 import pydantic.v1.types
+from openai import PermissionDeniedError
 from langchain_core.exceptions import OutputParserException
 from langchain_core.runnables import Runnable
 from langchain_openai import AzureChatOpenAI
 from langchain_core.prompts import FewShotPromptTemplate
+
 from globe_news_post_processor.config import Config
 from globe_news_post_processor.models import LLMArticleData
 from globe_news_post_processor.post_process_pipeline.langchain.llm_handlers.base import BaseLLMHandler
@@ -75,6 +77,8 @@ class AzureOpenAIHandler(BaseLLMHandler):
             # re-raise parsing error
             raise OutputParserException(
                 f"Failed to parse LLMArticleData from LLM response to article {article['id']}: {ope.llm_output}")
+        except PermissionDeniedError as pde:
+            raise
         except Exception as e:
             # Log and re-raise any other errors
             self._logger.error(f"Unknown error processing LLM response to article {article['id']}: {str(e)}")

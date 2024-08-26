@@ -1,0 +1,5 @@
+# Run post-processor on startup
+@reboot cd /post_processor && /usr/local/bin/python main.py --env prod >> /var/log/cron.log 2>&1
+
+# Run post-processor every day at 3:00 (1 hour after scraper)
+0 3 * * * cd /post_processor && /usr/local/bin/python main.py --env prod >> /var/log/cron.log 2>&1

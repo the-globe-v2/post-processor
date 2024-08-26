@@ -1,4 +1,4 @@
-# path: globe_news_scraper/logger.py
+# path: globe_post_processor/logger.py
 
 import os
 import logging

@@ -58,10 +58,6 @@ def configure_logging(log_level: str, logging_dir: str = 'logs',
     root_logger = logging.getLogger()
     root_logger.setLevel(logger_level)
 
-    # Remove all existing handlers
-    for handler in root_logger.handlers[:]:
-        root_logger.removeHandler(handler)
-
     # Add StreamHandler
     stream_handler = logging.StreamHandler()
     stream_handler.setFormatter(formatter)

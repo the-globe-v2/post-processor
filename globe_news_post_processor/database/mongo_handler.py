@@ -132,9 +132,10 @@ class MongoHandler:
         except PyMongoError as e:
             # Handle duplicate key errors (article already exists in failed_articles collection)
             if e._OperationFailure__code == 11000:  # type: ignore
+                error_val = list(e._OperationFailure__details['keyValue'].values())[0]  # type: ignore
                 self._logger.warning(
-                    f"Article {str(e._OperationFailure__details['keyValue']['_id'])} already exists in failed_articles collection, deleting original.")  # type: ignore
-                self._articles.delete_one({"_id": e._OperationFailure__details["keyValue"]['_id']})  # type: ignore
+                    f"Article {error_val} already exists in failed_articles collection, deleting original.")  # type: ignore
+                self._articles.delete_one(e._OperationFailure__details["keyValue"])  # type: ignore
             else:
                 self._logger.error(f"Error moving failed articles: {str(e)}")
 

@@ -95,4 +95,5 @@ class GlobeNewsPostProcessor:
         moved_ids = self._mongo_handler.move_failed_articles(failed_articles)
 
         self._logger.info(f"Successfully updated {len(successful_ids)} articles.")
-        self._logger.info(f"Moved {len(moved_ids)} failed articles to failed_articles collection.")
+        if len(moved_ids) > 0:
+            self._logger.info(f"Moved {len(moved_ids)} failed articles to failed_articles collection.")

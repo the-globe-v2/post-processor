@@ -1,4 +1,4 @@
-# path: globe_news_scraper/logger.py
+# path: globe_post_processor/logger.py
 
 import os
 import logging
@@ -57,10 +57,6 @@ def configure_logging(log_level: str, logging_dir: str = 'logs',
     # Add handler to the root logger
     root_logger = logging.getLogger()
     root_logger.setLevel(logger_level)
-
-    # Remove all existing handlers
-    for handler in root_logger.handlers[:]:
-        root_logger.removeHandler(handler)
 
     # Add StreamHandler
     stream_handler = logging.StreamHandler()

@@ -1,0 +1,50 @@
+# Ignore version control system directories
+.git
+.gitignore
+
+# Ignore Python cache files and directories
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.py[cod]
+*$py.class
+
+# Ignore virtual environment directories
+venv
+.venv
+
+# Ignore logs
+logs/
+*.log
+
+# Ignore development and local files
+*.swp
+.DS_Store
+.idea/
+.vscode/
+
+# Ignore test files and directories
+tests/
+test_*.py
+
+# Ignore documentation
+docs/
+*.md
+
+# Ignore any local data or temporary files
+data/
+tmp/
+
+# Ignore build artifacts
+*.egg-info/
+dist/
+build/
+
+# Ignore Docker-specific files (as they're not needed inside the image)
+Dockerfile
+docker-compose.yml
+
+# Ignore mypy configuration
+mypy.ini

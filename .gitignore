@@ -1,3 +1,6 @@
-.venv/
+*venv/
 .idea/
 *logs*/
+docker-compose.yml
+*.txt
+mypy.ini

@@ -64,7 +64,7 @@ jobs:
             ${{ github.event.pull_request.body }}
             
             Docker Image:
-            ghcr.io/${{ github.repository }}/frontend:${{ github.sha }}
+            ghcr.io/${{ github.repository }}:${{ github.sha }}
 
           draft: false
           prerelease: false

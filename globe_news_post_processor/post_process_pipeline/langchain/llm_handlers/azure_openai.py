@@ -40,9 +40,9 @@ class AzureOpenAIHandler(BaseLLMHandler):
 
     def process_article(self, article: Dict[str, Any]) -> Tuple[LLMArticleData, Dict[str, int]]:
         """
-        Process a single article using Azure OpenAI.
+        Process a single article using Azure OpenAI usually derived from GlobeArticle.
 
-        :param article: A dictionary containing the article data.
+        :param article: A dictionary containing the article data. Required keys: id, content (the data sent to the LLM).
         :return: A tuple containing the processed LLMArticleData and token usage information.
         """
         # Create a few-shot prompt template

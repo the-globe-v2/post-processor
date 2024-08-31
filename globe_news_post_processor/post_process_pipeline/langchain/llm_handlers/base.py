@@ -51,20 +51,28 @@ class BaseLLMHandler(ABC):
 
         :param filename: Name of the file containing few-shot examples.
         :return: List of dictionaries containing few-shot examples.
-        :raises ValueError: If the file is not found or the format is invalid.
+        :raises ValueError: If the file is not found, the format is invalid, or there's an encoding issue.
         """
         examples_path = os.path.join('globe_news_post_processor', 'post_process_pipeline', 'langchain', 'prompts',
                                      filename)
         try:
-            with open(examples_path, 'r') as f:
+            with open(examples_path, 'r', encoding='utf-8') as f:
                 data = json.load(f)
+
             # Validate the structure of the loaded data
             if not isinstance(data, list) or not all(
                     isinstance(item, dict) and all(isinstance(k, str) and isinstance(v, str) for k, v in item.items())
                     for item in data):
                 raise ValueError("Invalid few-shot examples format")
+
             return data
-        except (FileNotFoundError, json.JSONDecodeError) as e:
+        except FileNotFoundError:
+            raise ValueError(f"Few-shot examples file not found: {filename}")
+        except json.JSONDecodeError:
+            raise ValueError(f"Invalid JSON format in file: {filename}")
+        except UnicodeDecodeError:
+            raise ValueError(f"Encoding error when reading file: {filename}. Try using a different encoding.")
+        except Exception as e:
             raise ValueError(f"Error loading few-shot examples: {str(e)}")
 
     @staticmethod

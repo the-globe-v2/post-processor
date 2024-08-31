@@ -14,10 +14,10 @@ def main() -> None:
     args = parser.parse_args()
 
     config = get_config()
-    configure_logging(log_level='debug', logging_dir=config.LOGGING_DIR, environment=args.env)
+    configure_logging(log_level=config.LOG_LEVEL, logging_dir=config.LOGGING_DIR, environment=args.env)
 
     logger = structlog.get_logger()
-    logger.info("Starting GlobeNewsPostProcessor", environment=args.env)
+    logger.info("Starting GlobeNewsPostProcessor in mode: ", environment=args.env)
 
     try:
         processor = GlobeNewsPostProcessor(config)

@@ -3,30 +3,21 @@ FROM python:3.12-slim
 # Set the working directory for the application
 WORKDIR /post_processor
 
-# Install necessary system packages
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends \
-    cron \
-    && rm -rf /var/lib/apt/lists/*
-
-# Install Python dependencies
+# Copy package.json and package-lock.json
 COPY requirements.txt .
+
+# Install project dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy the application source code to the container
+# Copy project files and folders to the current working directory
 COPY . .
 
-# Perform setup operations and adjust permissions
-RUN chmod +x main.py && \
-    touch /var/log/cron.log
+# Environment variables can be defined here or overridden at runtime
+ENV PROCESSOR_ENV=prod
+ENV PROCESSOR_LOG_LEVEL=INFO
+ENV PROCESSOR_CRON_SCHEDULE="15 * * * *"
+ENV PROCESSOR_RUN_NOW=true
 
-# Set up cron jobs by copying a crontab file into the correct directory and applying it
-COPY crontab /etc/cron.d/post-processor-crontab
-RUN chmod 0644 /etc/cron.d/post-processor-crontab && \
-    crontab /etc/cron.d/post-processor-crontab
 
-# Environment variables can be defined
-ENV NAME GlobeNewsPostProcessor
-
-# The container will run cron in the foreground to keep it alive
-CMD ["sh", "-c", "cron && tail -f /var/log/cron.log"]
+# Command to run the application
+CMD ["python", "main.py"]

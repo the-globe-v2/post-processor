@@ -40,7 +40,7 @@ class GlobeNewsPostProcessor:
         while articles := self._fetch_article_batch(batch_size):
             curated_articles, failed_articles, total_token_usage = self._process_batch(articles)
             self._update_articles(curated_articles, failed_articles)
-            self._logger.info(f"Batch processed. Total token usage: {total_token_usage}")
+            self._logger.info(f"Batch of {batch_size} processed. Token usage: {total_token_usage}")
 
     def _fetch_article_batch(self, batch_size: int) -> List[GlobeArticle]:
         """

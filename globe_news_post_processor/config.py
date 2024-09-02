@@ -8,6 +8,9 @@ class Config(BaseSettings):
     model_config = SettingsConfigDict(env_file='.env', extra='ignore')
 
     # Common Configuration
+    ENV: Literal['dev', 'prod'] = 'dev'
+    CRON_SCHEDULE: str = '15 * * * *'
+    RUN_ON_STARTUP: bool = True
     LOG_LEVEL: Literal['debug', 'info', 'warning', 'error'] = 'info'
     LOGGING_DIR: str = Field(default='logs')
     MONGO_URI: str

@@ -8,3 +8,4 @@ langchain-openai~=0.1.22
 requests~=2.32.3
 pycountry~=24.6.1
 openai~=1.42.0
+croniter~=3.0.3

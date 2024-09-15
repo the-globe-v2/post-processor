@@ -8,7 +8,6 @@ on:
       - main
     paths:
       - 'globe_news_post_processor/**'
-      - 'crontab'
       - 'main.py'
       - 'Dockerfile'
   workflow_dispatch:

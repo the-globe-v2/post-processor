@@ -9,3 +9,5 @@ requests~=2.32.3
 pycountry~=24.6.1
 openai~=1.42.0
 croniter~=3.0.3
+anyio>=4.4.0 # not directly required, pinned by Snyk to avoid a vulnerability
+zipp>=3.19.1 # not directly required, pinned by Snyk to avoid a vulnerability

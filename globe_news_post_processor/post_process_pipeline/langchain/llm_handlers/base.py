@@ -1,9 +1,10 @@
 # path: globe_news_post_processor/post_process_pipeline/langchain/llm_handlers/base.py
 
+import json
+import os
 from abc import ABC, abstractmethod
 from typing import Dict, Any, Tuple, List
-import os
-import json
+
 import structlog
 from langchain_core.prompts import PromptTemplate
 from langchain_core.rate_limiters import InMemoryRateLimiter
@@ -53,8 +54,10 @@ class BaseLLMHandler(ABC):
         :return: List of dictionaries containing few-shot examples.
         :raises ValueError: If the file is not found, the format is invalid, or there's an encoding issue.
         """
-        examples_path = os.path.join('globe_news_post_processor', 'post_process_pipeline', 'langchain', 'prompts',
-                                     filename)
+        # Construct the path to the few-shot examples file
+        project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..', '..'))
+        examples_path = os.path.join(project_root, 'globe_news_post_processor', 'post_process_pipeline', 'langchain',
+                                     'prompts', filename)
         try:
             with open(examples_path, 'r', encoding='utf-8') as f:
                 data = json.load(f)
@@ -84,8 +87,11 @@ class BaseLLMHandler(ABC):
         :return: The system prompt as a string.
         :raises ValueError: If the file is not found.
         """
-        prompt_path = os.path.join('globe_news_post_processor', 'post_process_pipeline', 'langchain', 'prompts',
-                                   filename)
+        # Construct the path to the system prompt file
+        project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..', '..'))
+        prompt_path = os.path.join(project_root, 'globe_news_post_processor', 'post_process_pipeline', 'langchain',
+                                   'prompts', filename)
+
         try:
             with open(prompt_path, 'r') as f:
                 return f.read()

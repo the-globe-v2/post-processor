@@ -2,7 +2,9 @@
 
 import os
 from typing import Optional
+
 from pydantic import HttpUrl
+
 from globe_news_post_processor.config import Config
 from .azure_openai import AzureOpenAIHandler
 from .base import BaseLLMHandler
@@ -83,9 +85,12 @@ class LLMHandlerFactory:
         :param filename: The name of the few-shot examples file.
         :raises ValueError: If the file is not found.
         """
+
         # Construct the path to the few-shot examples file
-        examples_path = os.path.join('globe_news_post_processor', 'post_process_pipeline', 'langchain', 'prompts',
-                                     filename)
+        project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..', '..'))
+        examples_path = os.path.join(project_root, 'globe_news_post_processor', 'post_process_pipeline', 'langchain',
+                                     'prompts', filename)
+
         if not os.path.isfile(examples_path):
             raise ValueError(f"Few-shot examples file not found: {examples_path}")
 
@@ -98,7 +103,9 @@ class LLMHandlerFactory:
         :raises ValueError: If the file is not found.
         """
         # Construct the path to the system prompt file
-        prompt_path = os.path.join('globe_news_post_processor', 'post_process_pipeline', 'langchain', 'prompts',
-                                   filename)
+        project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..', '..'))
+        prompt_path = os.path.join(project_root, 'globe_news_post_processor', 'post_process_pipeline', 'langchain',
+                                   'prompts', filename)
+
         if not os.path.isfile(prompt_path):
             raise ValueError(f"System prompt file not found: {prompt_path}")
